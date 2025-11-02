@@ -30,10 +30,7 @@ model User {
   updatedAt             DateTime        @default(now()) @updatedAt
   sessions              Session[]
   accounts              Account[]
-  role                  Role            @default(VIEWER)
-  
-  teamId                String?
-  team                  Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  memberships           TeamMember[]
   assignedConversations Conversation[]   @relation("UserAssignedConversations")
   sentMessages          Message[]        @relation("UserSentMessages")
   authoredNotes         Note[]           @relation("UserAuthoredNotes")
@@ -91,13 +88,25 @@ model Verification {
 
 model Team {
   id            String          @id @default(cuid())
-  name          String
-  users         User[]
+  name          String          @unique
+  members       TeamMember[] 
   contacts      Contact[]
   conversations Conversation[]
   scheduledMsgs ScheduledMessage[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @default(now()) @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      Role     @default(VIEWER)
+
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
 }
 
 model Contact {
