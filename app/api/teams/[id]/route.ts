@@ -19,7 +19,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ success: false, message: error.message }, { status: error.statusCode });
     }
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to fetch team" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -45,7 +45,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to update team" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -65,6 +65,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to delete team" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }

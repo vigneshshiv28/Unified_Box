@@ -20,7 +20,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
 
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to fetch members" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }
 

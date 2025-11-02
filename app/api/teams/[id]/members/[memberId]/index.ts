@@ -56,6 +56,6 @@ export async function DELETE(
     }
 
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to remove member" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }

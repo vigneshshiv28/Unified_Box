@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     }
 
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to fetch teams" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -50,6 +50,6 @@ export async function POST(req: Request) {
     }
 
     console.error("Unexpected error:", error);
-    return NextResponse.json({ success: false, message: "Failed to create team" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }
