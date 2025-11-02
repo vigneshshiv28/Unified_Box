@@ -14,16 +14,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
 model User {
-  id            String  @id @default(cuid())
-  email         String    @unique
-  name          String?
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                    String          @id @default(cuid())
+  email                 String          @unique
+  name                  String?
+  emailVerified         Boolean         @default(false)
+  image                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now()) @updatedAt
+  sessions              Session[]
+  accounts              Account[]
+  role                  Role            @default(VIEWER)
+  
+  teamId                String?
+  team                  Team?          @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  assignedConversations Conversation[]   @relation("UserAssignedConversations")
+  sentMessages          Message[]        @relation("UserSentMessages")
+  authoredNotes         Note[]           @relation("UserAuthoredNotes")
+  mentionedIn           Mention[]        @relation("UserMentions")
+  createdSchedules      ScheduledMessage[] @relation("UserCreatedSchedules")
+
 
   @@map("user")
 }
@@ -72,3 +88,128 @@ model Verification {
 
   @@map("verification")
 }
+
+model Team {
+  id            String          @id @default(cuid())
+  name          String
+  users         User[]
+  contacts      Contact[]
+  conversations Conversation[]
+  scheduledMsgs ScheduledMessage[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now()) @updatedAt
+}
+
+model Contact {
+  id            String          @id @default(cuid())
+  name          String?
+  phone         String?
+  email         String?
+  socialHandles Json?        
+  teamId        String
+  team          Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  scheduledMsgs ScheduledMessage[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now()) @updatedAt
+}
+
+model Conversation {
+  id           String             @id @default(cuid())
+  contactId    String
+  contact      Contact            @relation(fields: [contactId], references: [id])
+  teamId       String
+  team         Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  messages     Message[]
+  notes        Note[]
+  assignedToId String?
+
+  assignedTo   User?              @relation("UserAssignedConversations", fields: [assignedToId], references: [id])
+  channel      Channel
+  status       ConversationStatus @default(OPEN)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now()) @updatedAt
+}
+
+
+enum Channel {
+  SMS
+  WHATSAPP
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id])
+  senderId       String?
+  
+  sender         User?            @relation("UserSentMessages", fields: [senderId], references: [id])
+  direction      MessageDirection
+  channel        Channel
+  body           String
+  mediaUrl       String?
+  timestamp      DateTime         @default(now())
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId])
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Note {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  authorId       String
+  author         User         @relation("UserAuthoredNotes", fields: [authorId], references: [id])
+  content        String
+  isPrivate      Boolean      @default(false)
+  mentions       Mention[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now()) @updatedAt
+}
+
+model Mention {
+  id          String @id @default(cuid())
+  noteId      String
+  note        Note   @relation(fields: [noteId], references: [id])
+  mentionedId String
+  mentioned   User   @relation("UserMentions", fields: [mentionedId], references: [id])
+}
+
+enum ScheduleStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model ScheduledMessage {
+  id          String   @id @default(cuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id])
+  contactId   String
+  contact     Contact  @relation(fields: [contactId], references: [id])
+  createdById String
+  
+  createdBy   User     @relation("UserCreatedSchedules", fields: [createdById], references: [id])
+  channel     Channel
+  body        String
+  mediaUrl    String?
+  scheduledAt DateTime
+  sentAt      DateTime?
+  status      ScheduleStatus @default(PENDING)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+}
+
